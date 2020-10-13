@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using Microsoft.ML;
 using Microsoft.ML.Data;
+using Microsoft.ML.Trainers;
 using Microsoft.ML.Trainers.FastTree;
 
 namespace TaxiFarePrediction
@@ -28,6 +29,8 @@ namespace TaxiFarePrediction
 
         static void Main(string[] args)
         {
+            Console.WriteLine("從 csv 讀取1,048,575筆資料，使用 Fasttree 方式訓練模型");
+
             //讀取資料訓練模型 > 評估模型成效 > 跑預測結果
             Console.WriteLine("讀取csv資料訓練模型 > 評估模型成效 > 跑預測結果");
             TrainModel_Evaluate_Prediction();
@@ -78,7 +81,11 @@ namespace TaxiFarePrediction
             ITransformer trainedModel = mlContext.Model.Load("model.zip", out modelSchema);
 
             var model = trainedModel;
+
+            var a = model.GetOutputSchema(modelSchema);
+
             TimeCalc += "LoadFinish" + (DateTime.UtcNow - StartTime) + Environment.NewLine;
+
 
 
             //Evaluate(mlContext, model);
@@ -156,7 +163,7 @@ namespace TaxiFarePrediction
 
             Console.WriteLine();
             Console.WriteLine($"*************************************************");
-            Console.WriteLine($"*       Model quality metrics evaluation         ");
+            Console.WriteLine($"*       模型品質指標評估                         ");
             Console.WriteLine($"*------------------------------------------------");
             Console.WriteLine($"*       RSquared Score:      {metrics.RSquared:0.##}");
             Console.WriteLine($"*       Root Mean Squared Error:      {metrics.RootMeanSquaredError:#.##}");
@@ -214,10 +221,12 @@ namespace TaxiFarePrediction
             var prediction2 = predictionFunction.Predict(taxiTripSample2);
             var prediction3 = predictionFunction.Predict(taxiTripSample3);
 
+           
+
             Console.WriteLine($"**********************************************************************");
-            Console.WriteLine($"Predicted fare: {prediction.FareAmount:0.####}, actual fare: 15.5");
-            Console.WriteLine($"Predicted fare: {prediction2.FareAmount:0.####}, actual fare: 29.5");
-            Console.WriteLine($"Predicted fare: {prediction3.FareAmount:0.####}, actual fare: 8.5");
+            Console.WriteLine($"預測: {prediction.FareAmount:0.####}, 實際: 15.5, 誤差 " + Math.Round((Math.Abs(15.5 - prediction.FareAmount)) / 15.5,4)  +"%");
+            Console.WriteLine($"預測: {prediction2.FareAmount:0.####}, 實際: 29.5, 誤差 " + Math.Round((Math.Abs(29.5 - prediction.FareAmount))/29.5,4) + "%");
+            Console.WriteLine($"預測: {prediction3.FareAmount:0.####}, 實際: 8.5, 誤差 " + Math.Round(Math.Abs(8.5 - prediction.FareAmount)/8.5,4) + "%");
             Console.WriteLine($"**********************************************************************");
         }
     }
