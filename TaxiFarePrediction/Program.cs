@@ -118,14 +118,22 @@ namespace TaxiFarePrediction
             .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "VendorIdEncoded", inputColumnName: "VendorId"))
             .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "RateCodeEncoded", inputColumnName: "RateCode"))
             .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "PaymentTypeEncoded", inputColumnName: "PaymentType"))
-            .Append(mlContext.Transforms.Concatenate("Features", "VendorIdEncoded", "RateCodeEncoded", "PassengerCount", "TripDistance", "PaymentTypeEncoded"))
-            .Append(mlContext.Regression.Trainers.FastTree()); //將 FastTreeRegressionTrainer 機器學習服務工作新增到資料轉換定義
+            .Append(mlContext.Transforms.Concatenate("Features", "VendorIdEncoded", "RateCodeEncoded", "PassengerCount", "TripDistance", "PaymentTypeEncoded"));
 
-            var model = pipeline.Fit(dataView);
+            //  將 FastTree 和 FastForest 機器學習服務工作新增到資料轉換定義
+            // 分別是 決策樹 和 決策森林 兩種回歸模型，可以比較哪種學習方式成效比較好
+            var FastTree = pipeline.Append(mlContext.Regression.Trainers.FastTree()); ; 
+            var FastForest = pipeline.Append(mlContext.Regression.Trainers.FastForest());
+            
+            var model1 = FastTree.Fit(dataView);
+            mlContext.Model.Save(model1, dataView.Schema, "model1.zip"); 
 
-            SaveModel(mlContext, dataView, model);
+            var model2 = FastForest.Fit(dataView);
+            mlContext.Model.Save(model2, dataView.Schema, "model2.zip");
 
-            return model;
+            //SaveModel(mlContext, dataView, model);
+
+            return model2;
         }
         /// <summary>
         /// 儲存訓練完的模型
@@ -136,7 +144,7 @@ namespace TaxiFarePrediction
         /// <param name="model"></param>
         private static void SaveModel(MLContext mlContext, IDataView dataView, TransformerChain<RegressionPredictionTransformer<FastTreeRegressionModelParameters>> model)
         {
-            // 缺一段檢查是否有同名檔案，刪掉或是自動換檔名
+            // 缺一段檢查是否有同名檔案，把同名的檔案刪掉或是自動換檔名
             mlContext.Model.Save(model, dataView.Schema, "model.zip");
         }
 
